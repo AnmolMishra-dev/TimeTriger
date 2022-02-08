@@ -5,7 +5,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:perfect_volume_control/perfect_volume_control.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
-
+import 'package:geocoding/geocoding.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   initializeService();
@@ -67,16 +67,16 @@ void onStart() {
     }
   });
 
-  // bring to foreground
+
 
   service.setForegroundMode(true);
-  Timer.periodic(Duration(seconds: 30), (timer) async {
+  Timer.periodic(Duration(minutes: 1), (timer) async {
     if (!(await service.isServiceRunning())) timer.cancel();
     Position userLocation = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
 
     service.setNotificationInfo(
-      title: "My App Service",
+      title: "GPS :",
       content: "Updated at ${userLocation.latitude}${userLocation.longitude}",
     );
 
@@ -88,8 +88,9 @@ void onStart() {
     //  print('longitude' + userLocation.longitude.toString());
     // print('latitude' + userLocation.latitude.toString());
     prefs = await SharedPreferences.getInstance();
-    final double? value1 = prefs?.getDouble('latitude');
-    final double? value2 = prefs?.getDouble('longitude');
+
+     double? value1 = prefs?.getDouble('latitude');
+  double? value2 = prefs?.getDouble('longitude');
 
     distanceInMeters = Geolocator.distanceBetween(value1!, value2!, userLocation.latitude, userLocation.longitude);
 
@@ -102,9 +103,12 @@ void onStart() {
     if (!(distance >= 5)){
       double currentvol = 0.5;
       currentvol = await PerfectVolumeControl.getVolume();
+      PerfectVolumeControl.hideUI = true;
       PerfectVolumeControl.setVolume(0.0);
+
       print("currentvol"+currentvol.toString());
     }else{
+      PerfectVolumeControl.hideUI = true;
       PerfectVolumeControl.setVolume(1.0);
     }
 
@@ -124,8 +128,9 @@ class _MyAppState extends State<MyApp> {
   Position ?currentLocation;
   String text = "Stop Service";
 
-
-
+ double ?value1 ;
+  double? value2;
+  List addresses=[];
   @override
   void initState() {
 
@@ -133,11 +138,26 @@ class _MyAppState extends State<MyApp> {
   }
 
   void getLocation() async {
+
     Position currentLocation = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    prefs!.setDouble('latitude',currentLocation.latitude);
-    prefs!.setDouble('longitude',currentLocation.longitude);
+    await prefs!.clear();
+    // prefs!.setDouble('latitude',currentLocation.latitude);
+    // prefs!.setDouble('longitude',currentLocation.longitude);
     // final value2 = prefs?.getDouble('longitude');
+    prefs = await SharedPreferences.getInstance();
+    setState(() {
+      prefs!.setDouble('latitude',currentLocation.latitude);
+      prefs!.setDouble('longitude',currentLocation.longitude);
+      value1 = prefs?.getDouble('latitude');
+      value2 = prefs?.getDouble('longitude');
+
+    });
+    addresses = await placemarkFromCoordinates(currentLocation.latitude, currentLocation.longitude);
+
+
+
+
 
 
 
@@ -150,9 +170,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Service App'),
-        ),
+appBar: AppBar(),
         body: Column(
           children: [
             StreamBuilder<Map<String, dynamic>?>(
@@ -170,20 +188,20 @@ class _MyAppState extends State<MyApp> {
                 return Text(data['current_date'].toString());
               },
             ),
-            ElevatedButton(
-              child: Text("Foreground Mode"),
-              onPressed: () {
-                FlutterBackgroundService()
-                    .sendData({"action": "setAsForeground"});
-              },
-            ),
-            ElevatedButton(
-              child: Text("Background Mode"),
-              onPressed: () {
-                FlutterBackgroundService()
-                    .sendData({"action": "setAsBackground"});
-              },
-            ),
+            // ElevatedButton(
+            //   child: Text("Foreground Mode"),
+            //   onPressed: () {
+            //     FlutterBackgroundService()
+            //         .sendData({"action": "setAsForeground"});
+            //   },
+            // ),
+            // ElevatedButton(
+            //   child: Text("Background Mode"),
+            //   onPressed: () {
+            //     FlutterBackgroundService()
+            //         .sendData({"action": "setAsBackground"});
+            //   },
+            // ),
             ElevatedButton(
               child: Text(text),
               onPressed: () async {
@@ -208,6 +226,8 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(
               child: Text("GetLoaction"),
               onPressed: () {
+
+
                 getLocation();
                 // double? value1 = prefs!.getDouble('latitude');
                 // double? value2 = prefs!.getDouble('longitude');
@@ -218,7 +238,9 @@ class _MyAppState extends State<MyApp> {
               },
             ),
 
-            Text(distanceInMeters.toString())
+            Container(
+                height: 400,
+                child: SingleChildScrollView(child: Text(value1.toString()+""+value2.toString())))
 
 
 
