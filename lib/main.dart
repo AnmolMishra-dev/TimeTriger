@@ -70,7 +70,7 @@ void onStart() {
 
 
   service.setForegroundMode(true);
-  Timer.periodic(Duration(minutes: 1), (timer) async {
+  Timer.periodic(Duration(seconds: 30), (timer) async {
     if (!(await service.isServiceRunning())) timer.cancel();
     Position userLocation = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
@@ -188,20 +188,20 @@ appBar: AppBar(),
                 return Text(data['current_date'].toString());
               },
             ),
-            // ElevatedButton(
-            //   child: Text("Foreground Mode"),
-            //   onPressed: () {
-            //     FlutterBackgroundService()
-            //         .sendData({"action": "setAsForeground"});
-            //   },
-            // ),
-            // ElevatedButton(
-            //   child: Text("Background Mode"),
-            //   onPressed: () {
-            //     FlutterBackgroundService()
-            //         .sendData({"action": "setAsBackground"});
-            //   },
-            // ),
+            ElevatedButton(
+              child: Text("Foreground Mode"),
+              onPressed: () {
+                FlutterBackgroundService()
+                    .sendData({"action": "setAsForeground"});
+              },
+            ),
+            ElevatedButton(
+              child: Text("Background Mode"),
+              onPressed: () {
+                FlutterBackgroundService()
+                    .sendData({"action": "setAsBackground"});
+              },
+            ),
             ElevatedButton(
               child: Text(text),
               onPressed: () async {
@@ -239,8 +239,8 @@ appBar: AppBar(),
             ),
 
             Container(
-                height: 400,
-                child: SingleChildScrollView(child: Text(value1.toString()+""+value2.toString())))
+
+                child: Text(value1.toString()+""+value2.toString()))
 
 
 
